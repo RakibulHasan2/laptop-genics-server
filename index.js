@@ -97,14 +97,14 @@ async function run(){
             const result = await usersCollection.insertOne(user)
             res.send(result);
         })
-         //------------------------ALL uSERS--------------------------
+         //------------------------ALL seller--------------------------
        app.get('/users/allSellers', async (req, res) => {
         const query = {};
         const users = await usersCollection.find(query).toArray();     
         const sellers = users.filter(user => user.role === 'seller')
         res.send(sellers);
     })
-    //------------------------ALL uSERS--------------------------
+    //------------------------ALL buyer--------------------------
     app.get('/users/allBuyers', async (req, res) => {
         const query = {};
         const users = await usersCollection.find(query).toArray();     
@@ -119,9 +119,20 @@ async function run(){
        console.log(item)
        const result = await productsCollection.insertOne(item)
        res.send(result)
-       })
+       })  
 
-      
+       app.get('/dashboard/products', async (req, res) => {
+        const email = req.query.email
+        // const decodedEmail = req.decoded.email
+        // if(email !== decodedEmail){
+        //     return res.status(403).send({message: 'forbidden access'})
+        // }
+        const query = { email: email };
+        // console.log(req.headers.authorization)
+        const result = await productsCollection.find(query).toArray()
+        res.send(result)
+    })   
+
     }
     finally{
 
