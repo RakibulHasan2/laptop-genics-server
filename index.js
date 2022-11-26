@@ -76,7 +76,8 @@ async function run() {
             if (email !== decodedEmail) {
                 return res.status(403).send({ message: 'forbidden access' })
             }       
-            const query = { email: email };
+            const query = { email: email};
+           
             // console.log(req.headers.authorization)
             const result = await bookingCollection.find(query).toArray()
             res.send(result)
@@ -90,6 +91,13 @@ async function run() {
 
         app.post('/bookedLaptop', async (req, res) => {
             const booking = req.body
+            const query= {productName: booking.productName }     
+            const alreadyBooked = await bookingCollection.find(query).toArray()
+            console.log(alreadyBooked)
+            if(alreadyBooked.length){
+                const message = `You already Booked this product`
+                return res.send({acknowledged: false, message})
+            }
             const result = await bookingCollection.insertOne(booking)
             res.send(result)
         })
@@ -97,14 +105,10 @@ async function run() {
         // -----------user data -----------------
         app.get('/users', async (req, res) => {
             const email = req.query.email
-            // const decodedEmail = req.decoded.email
-            // if(email !== decodedEmail){
-            //     return res.status(403).send({message: 'forbidden access'})
-            // }
             const query = { email: email };
             // console.log(req.headers.authorization)
             const result = await usersCollection.find(query).toArray()
-            console.log(result)
+            // console.log(result)
             res.send(result)
 
         })
@@ -137,7 +141,7 @@ async function run() {
         })
 
         //------------------------ALL buyer--------------------------
-        app.get('/users/allBuyers', async (req, res) => {
+        app.get('/users/allBuyers',verifyJWT, async (req, res) => {
             const query = {};
             const users = await usersCollection.find(query).toArray();
             const sellers = users.filter(user => user.role === 'buyer')
@@ -160,19 +164,19 @@ async function run() {
 
 
         //--------------------add a product and my product----------------------
-        app.post('/products', async (req, res) => {
+        app.post('/products',verifyJWT, async (req, res) => {
             const item = req.body
             console.log(item)
             const result = await productsCollection.insertOne(item)
             res.send(result)
         })
 
-        app.get('/dashboard/products', async (req, res) => {
+        app.get('/dashboard/products',verifyJWT, async (req, res) => {
             const email = req.query.email
-            // const decodedEmail = req.decoded.email
-            // if(email !== decodedEmail){
-            //     return res.status(403).send({message: 'forbidden access'})
-            // }
+            const decodedEmail = req.decoded.email
+            if(email !== decodedEmail){
+                return res.status(403).send({message: 'forbidden access'})
+            }
             const query = { email: email };
             // console.log(req.headers.authorization)
             const result = await productsCollection.find(query).toArray()
@@ -220,7 +224,7 @@ async function run() {
                 }
             }
             const updatedResult = await bookingCollection.updateOne(filter, updatedDoc)
-            console.log(updatedResult)
+            // console.log(updatedResult)
             res.send(result);
         })
 
