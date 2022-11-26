@@ -180,7 +180,6 @@ async function run() {
         })
         app.get('/dashboard/products/:id', async (req, res) => {
             const id = req.params.id;
-            console.log()
             const query = { _id: ObjectId(id) };
             const result = await productsCollection.findOne(query);
             res.send(result)
@@ -221,6 +220,7 @@ async function run() {
                 }
             }
             const updatedResult = await bookingCollection.updateOne(filter, updatedDoc)
+            console.log(updatedResult)
             res.send(result);
         })
 
