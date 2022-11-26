@@ -88,15 +88,24 @@ async function run() {
 
         // -----------user data -----------------
         app.get('/users', async (req, res) => {
-            const query = {}
-            const users = await usersCollection.find(query).toArray()
-            res.send(users)
+            const email = req.query.email
+            // const decodedEmail = req.decoded.email
+            // if(email !== decodedEmail){
+            //     return res.status(403).send({message: 'forbidden access'})
+            // }
+            const query = { email: email };
+            // console.log(req.headers.authorization)
+            const result = await usersCollection.find(query).toArray()
+            console.log(result)
+            res.send(result)
+
         })
         app.post('/users', async (req, res) => {
             const user = req.body;
             const result = await usersCollection.insertOne(user)
             res.send(result);
         })
+
         //------------------------ALL seller--------------------------
         app.get('/users/allSellers', async (req, res) => {
             const query = {};
