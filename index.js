@@ -11,38 +11,38 @@ app.use(express.json())
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.xgyce0q.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
- 
 
-function verifyJWT(req, res, next){
+
+function verifyJWT(req, res, next) {
     const authHeader = req.headers.authorization;
-    if(!authHeader){
+    if (!authHeader) {
         return res.status(401).send('unauthorized access')
     }
     const token = authHeader.split(' ')[1];
-    jwt.verify(token, process.env.ACCESS_TOKEN, function(err, decoded){
-        if(err){
-            return res.status(403).send({message: 'forbidden access'})
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'forbidden access' })
         }
-         req.decoded = decoded;
-         next()
+        req.decoded = decoded;
+        next()
     })
 
- }
+}
 
-async function run(){
-    try{
+async function run() {
+    try {
         const categoryCollection = client.db('Laptop-Genics').collection('categories')
         const productsCollection = client.db('Laptop-Genics').collection('products')
         const bookingCollection = client.db('Laptop-Genics').collection('laptop-bookings')
         const usersCollection = client.db('Laptop-Genics').collection('users')
-        
-        app.get('/categories', async( req, res) => {
+
+        app.get('/categories', async (req, res) => {
             const query = {}
             const result = await categoryCollection.find(query).toArray()
             res.send(result)
         })
-     //-----------------products data -----------------------
-        app.get('/products', async( req, res) => {
+        //-----------------products data -----------------------
+        app.get('/products', async (req, res) => {
             const query = {}
             const result = await productsCollection.find(query).toArray()
             res.send(result)
@@ -54,96 +54,138 @@ async function run(){
             res.send(result);
         })
         //--------------------------jwt token--------------------
-        app.get('/jwt', async(req, res) =>{
-            const email  = req.query.email
-            const query = {email :email}
+        app.get('/jwt', async (req, res) => {
+            const email = req.query.email
+            const query = { email: email }
             const user = await usersCollection.findOne(query)
-            if(user){
-                const token = jwt.sign({email}, process.env.ACCESS_TOKEN, {expiresIn: '1d'})
-                 return res.send({accessToken: token})
+            if (user) {
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1d' })
+                return res.send({ accessToken: token })
             }
             console.log(user)
-            res.status(403).send({accessToken: ''})
+            res.status(403).send({ accessToken: '' })
 
         })
 
         //-------------------------booked products-----------------------
-        app.get('/bookedLaptop',verifyJWT, async( req,res) =>{
+        app.get('/bookedLaptop', verifyJWT, async (req, res) => {
             const email = req.query.email
             const decodedEmail = req.decoded.email
-            if(email !== decodedEmail){
-                return res.status(403).send({message: 'forbidden access'})
+            if (email !== decodedEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
             }
-            const query = {email: email};
+            const query = { email: email };
             // console.log(req.headers.authorization)
-            const result =  await bookingCollection.find(query).toArray()
+            const result = await bookingCollection.find(query).toArray()
             res.send(result)
         })
-       
-        app.post('/bookedLaptop', async(req, res) => {
+
+        app.post('/bookedLaptop', async (req, res) => {
             const booking = req.body
             const result = await bookingCollection.insertOne(booking)
             res.send(result)
         })
 
         // -----------user data -----------------
-        app.get('/users', async(req, res) =>{
+        app.get('/users', async (req, res) => {
             const query = {}
             const users = await usersCollection.find(query).toArray()
             res.send(users)
-          })
-        app.post('/users', async(req, res)=>{
+        })
+        app.post('/users', async (req, res) => {
             const user = req.body;
             const result = await usersCollection.insertOne(user)
             res.send(result);
         })
-         //------------------------ALL seller--------------------------
-       app.get('/users/allSellers', async (req, res) => {
-        const query = {};
-        const users = await usersCollection.find(query).toArray();     
-        const sellers = users.filter(user => user.role === 'seller')
-        res.send(sellers);
-    })
-    //------------------------ALL buyer--------------------------
-    app.get('/users/allBuyers', async (req, res) => {
-        const query = {};
-        const users = await usersCollection.find(query).toArray();     
-        const sellers = users.filter(user => user.role === 'buyer')
-        res.send(sellers);
-    })
+        //------------------------ALL seller--------------------------
+        app.get('/users/allSellers', async (req, res) => {
+            const query = {};
+            const users = await usersCollection.find(query).toArray();
+            const sellers = users.filter(user => user.role === 'seller')
+            res.send(sellers);
+        })
+
+        app.get('/dashboard/allSellers/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log()
+            const query = { _id: ObjectId(id) };
+            const result = await usersCollection.findOne(query);
+            res.send(result)
+        })
+        app.delete('/dashboard/allSellers/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await usersCollection.deleteOne(query);
+            res.send(result)
+        })
+
+        //------------------------ALL buyer--------------------------
+        app.get('/users/allBuyers', async (req, res) => {
+            const query = {};
+            const users = await usersCollection.find(query).toArray();
+            const sellers = users.filter(user => user.role === 'buyer')
+            res.send(sellers);
+        })
+
+        app.get('/dashboard/allBuyers/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log()
+            const query = { _id: ObjectId(id) };
+            const result = await usersCollection.findOne(query);
+            res.send(result)
+        })
+        app.delete('/dashboard/allBuyers/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await usersCollection.deleteOne(query);
+            res.send(result)
+        })
 
 
-   //--------------------add a product and my product----------------------
-      app.post('/products', async( req, res) => {
-       const item = req.body
-       console.log(item)
-       const result = await productsCollection.insertOne(item)
-       res.send(result)
-       })  
+        //--------------------add a product and my product----------------------
+        app.post('/products', async (req, res) => {
+            const item = req.body
+            console.log(item)
+            const result = await productsCollection.insertOne(item)
+            res.send(result)
+        })
 
-       app.get('/dashboard/products', async (req, res) => {
-        const email = req.query.email
-        // const decodedEmail = req.decoded.email
-        // if(email !== decodedEmail){
-        //     return res.status(403).send({message: 'forbidden access'})
-        // }
-        const query = { email: email };
-        // console.log(req.headers.authorization)
-        const result = await productsCollection.find(query).toArray()
-        res.send(result)
-    })   
+        app.get('/dashboard/products', async (req, res) => {
+            const email = req.query.email
+            // const decodedEmail = req.decoded.email
+            // if(email !== decodedEmail){
+            //     return res.status(403).send({message: 'forbidden access'})
+            // }
+            const query = { email: email };
+            // console.log(req.headers.authorization)
+            const result = await productsCollection.find(query).toArray()
+            res.send(result)
+        })
+        app.get('/dashboard/products/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log()
+            const query = { _id: ObjectId(id) };
+            const result = await productsCollection.findOne(query);
+            res.send(result)
+        })
+        app.delete('/dashboard/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await productsCollection.deleteOne(query);
+            res.send(result)
+        })
 
     }
-    finally{
+    finally {
 
     }
 }
-run().catch(err=> console.log(err))
+run().catch(err => console.log(err))
 
-app.get('/', (req, res)=>{
+app.get('/', (req, res) => {
     res.send('laptop genic running')
 })
 
-app.listen(port,() => {
+app.listen(port, () => {
     console.log(`laptop genic is running ${port}`)
 })
