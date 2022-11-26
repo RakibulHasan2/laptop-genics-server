@@ -73,7 +73,7 @@ async function run() {
             const decodedEmail = req.decoded.email
             if (email !== decodedEmail) {
                 return res.status(403).send({ message: 'forbidden access' })
-            }
+            }       
             const query = { email: email };
             // console.log(req.headers.authorization)
             const result = await bookingCollection.find(query).toArray()
