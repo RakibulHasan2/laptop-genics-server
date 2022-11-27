@@ -259,7 +259,7 @@ async function run() {
          app.post('/advertise', async (req, res) => {
             const user = req.body;
             // const query = {name: user.name }     
-            // const alreadyAdvertised = await productsCollection.find(query)
+            // const alreadyAdvertised = await productsCollection.find(query).toArray()
             // console.log(alreadyAdvertised)
             // if(alreadyAdvertised){
             //     const message = `Sorry, This Product Advertised`
@@ -281,6 +281,13 @@ async function run() {
             const result = await reportCollection.insertOne(user)
             res.send(result);
         })
+        app.delete('/dashboard/adminReport/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await reportCollection.deleteOne(query);
+            res.send(result)
+        })
+
 
 
     }
