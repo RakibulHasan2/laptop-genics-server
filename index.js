@@ -37,6 +37,8 @@ async function run() {
         const bookingCollection = client.db('Laptop-Genics').collection('laptop-bookings')
         const usersCollection = client.db('Laptop-Genics').collection('users')
         const paymentsCollection = client.db('Laptop-Genics').collection('payments');
+        const advertiseCollection = client.db('Laptop-Genics').collection('advertise');
+        const reportCollection = client.db('Laptop-Genics').collection('admin-report');
 
         app.get('/categories', async (req, res) => {
             const query = {}
@@ -51,12 +53,24 @@ async function run() {
         })
         app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
-            const paidProduct = await paymentsCollection.find({}).toArray()
-            const filter = req.body
-            console.log(paidProduct)
+            
             const query = { category_id: id };
+            // const paidProduct = await paymentsCollection.find(query).toArray()  
+            //  console.log(paidProduct)  
             const result = await productsCollection.find(query).toArray();
-            // const remainProduct = result.filter()
+           
+            // paidProduct.forEach( option => {
+            //     const optionBooked = result.filter(book => book.name === option.name)
+            //     const bookedSlot = optionBooked.map(book => book.name)
+            //     const remainingSlots = result.filter( slot => !bookedSlot.includes(slot))
+            //     option.name = remainingSlots
+               
+                
+            // console.log(remainingSlots)
+             
+            // })
+
+  
             res.send(result);
         })
         //--------------------------jwt token--------------------
@@ -95,9 +109,9 @@ async function run() {
 
         app.post('/bookedLaptop', async (req, res) => {
             const booking = req.body
-            const query= {productName: booking.productName }     
+            const query = {productName: booking.productName }     
             const alreadyBooked = await bookingCollection.find(query).toArray()
-            console.log(alreadyBooked)
+            // console.log(alreadyBooked)
             if(alreadyBooked.length){
                 const message = `Sorry, This Product Booked`
                 return res.send({acknowledged: false, message})
@@ -110,12 +124,14 @@ async function run() {
         app.get('/users', async (req, res) => {
             const email = req.query.email
             const query = { email: email };
+            const queryAll = {}
             // console.log(req.headers.authorization)
             const result = await usersCollection.find(query).toArray()
+
             // console.log(result)
             res.send(result)
-
         })
+       
         app.post('/users', async (req, res) => {
             const user = req.body;
             const result = await usersCollection.insertOne(user)
@@ -168,26 +184,27 @@ async function run() {
 
 
         //--------------------add a product and my product----------------------
-        app.post('/products',verifyJWT, async (req, res) => {
+        app.post('/products', async (req, res) => {
             const item = req.body
             // console.log(item)
             const result = await productsCollection.insertOne(item)
             res.send(result)
         })
 
-        app.get('/dashboard/products',verifyJWT, async (req, res) => {
+        app.get('/dashboard/products', async (req, res) => {
             const email = req.query.email
-            const decodedEmail = req.decoded.email
-            if(email !== decodedEmail){
-                return res.status(403).send({message: 'forbidden access'})
-            }
+            // const decodedEmail = req.decoded.email
+            // if(email !== decodedEmail){
+            //     return res.status(403).send({message: 'forbidden access'})
+            // }
             const query = { email: email };
             // console.log(req.headers.authorization)
             const result = await productsCollection.find(query).toArray()
             res.send(result)
         })
-        app.get('/dashboard/products/:id', async (req, res) => {
+        app.get('/dashboard/products/:id',verifyJWT, async (req, res) => {
             const id = req.params.id;
+            
             const query = { _id: ObjectId(id) };
             const result = await productsCollection.findOne(query);
             res.send(result)
@@ -229,6 +246,39 @@ async function run() {
             }
             const updatedResult = await bookingCollection.updateOne(filter, updatedDoc)
             // console.log(updatedResult)
+            res.send(result);
+        })
+         //////-----------------advertise product --------------------------
+
+         app.get('/advertise', async (req, res) => {
+            const query = {};
+
+            const result = await advertiseCollection.find(query).toArray()
+            res.send(result);
+        })
+         app.post('/advertise', async (req, res) => {
+            const user = req.body;
+            // const query = {name: user.name }     
+            // const alreadyAdvertised = await productsCollection.find(query)
+            // console.log(alreadyAdvertised)
+            // if(alreadyAdvertised){
+            //     const message = `Sorry, This Product Advertised`
+            //     return res.send({acknowledged: false, message})
+            // }
+            const result = await advertiseCollection.insertOne(user)
+            res.send(result);
+        })
+
+        /// -----------------report to admin---------------------
+        
+        app.get('/reportAdmin', async (req, res) => {
+            const query = {};
+            const result = await reportCollection.find(query).toArray()
+            res.send(result);
+        })
+        app.post('/reportAdmin', async (req, res) => {
+            const user = req.body;
+            const result = await reportCollection.insertOne(user)
             res.send(result);
         })
 
