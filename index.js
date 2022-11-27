@@ -51,8 +51,12 @@ async function run() {
         })
         app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
+            const paidProduct = await paymentsCollection.find({}).toArray()
+            const filter = req.body
+            console.log(paidProduct)
             const query = { category_id: id };
             const result = await productsCollection.find(query).toArray();
+            // const remainProduct = result.filter()
             res.send(result);
         })
         //--------------------------jwt token--------------------
@@ -95,7 +99,7 @@ async function run() {
             const alreadyBooked = await bookingCollection.find(query).toArray()
             console.log(alreadyBooked)
             if(alreadyBooked.length){
-                const message = `You already Booked this product`
+                const message = `Sorry, This Product Booked`
                 return res.send({acknowledged: false, message})
             }
             const result = await bookingCollection.insertOne(booking)
@@ -141,7 +145,7 @@ async function run() {
         })
 
         //------------------------ALL buyer--------------------------
-        app.get('/users/allBuyers',verifyJWT, async (req, res) => {
+        app.get('/users/allBuyers', async (req, res) => {
             const query = {};
             const users = await usersCollection.find(query).toArray();
             const sellers = users.filter(user => user.role === 'buyer')
@@ -166,7 +170,7 @@ async function run() {
         //--------------------add a product and my product----------------------
         app.post('/products',verifyJWT, async (req, res) => {
             const item = req.body
-            console.log(item)
+            // console.log(item)
             const result = await productsCollection.insertOne(item)
             res.send(result)
         })
