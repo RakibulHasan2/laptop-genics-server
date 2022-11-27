@@ -287,9 +287,6 @@ async function run() {
             const result = await reportCollection.deleteOne(query);
             res.send(result)
         })
-
-
-
     }
     finally {
 
