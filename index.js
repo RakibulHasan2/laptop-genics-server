@@ -299,5 +299,5 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
-    console.log(`laptop genic is running ${port}`)
+    console.log(`laptop genic is running on ${port}`)
 })
